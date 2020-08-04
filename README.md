@@ -1,2 +1,0 @@
-# vehicle_dash_board_recog
-机动车仪表盘速度值识别
