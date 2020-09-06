@@ -13,8 +13,8 @@ using namespace std;
 
 bool point_mask(cv::Mat input, cv::Mat& out_mask, bool postpre)
 {
-    cv::Scalar thre_point(2, 2, 30);
-    seg_mask(input, out_mask, thre_point);
+    cv::Scalar thre_point(1.3, 1, 50);
+    seg_mask(input, out_mask, thre_point, postpre);
     return true;
 }
 
@@ -54,7 +54,6 @@ void lines_detect(cv::Mat input_3c, std::vector<cv::Vec4f>& line_data, int mode)
 void lines_select(std::vector<cv::Vec4f>& line_data, vector<int>& param, std::vector<cv::Vec4f>& line_out)
 {
     line_out.clear();
-    int length_thre = 12;
     for(int li = 0; li < line_data.size(); li ++)
     {
        float length = 0;
@@ -72,30 +71,37 @@ cv::Mat pointer_loc(cv::Mat input_3c, cv::Point ct, std::vector<cv::Point>& poin
     pointer.clear();
     cv::Size circle_size(input_3c.cols, input_3c.rows);
     Mat pointer_mask_out(circle_size, CV_8UC1, Scalar(0));
-//    Mat pointer_mask_3(circle_size, CV_8UC3, Scalar(0, 0, 0));
     Mat pointer_sel(circle_size, CV_8UC3, Scalar(0, 0, 0));
     Mat pointer_sel_processed(circle_size, CV_8UC1, Scalar(0));
     Mat input_gray, w_oPointer;
     std::vector<cv::Vec4f> lines, line_data;
+    vector<cv::Point> mask_points;
     vector<int> temp;
     
     temp.push_back(0);
     temp.push_back(1000);
     cv::cvtColor(input_3c, input_gray, COLOR_BGR2GRAY);
-    point_mask(input_3c, pointer_mask_out);
-//    cvtColor(pointer_mask_out, pointer_mask_3, COLOR_GRAY2BGR);
-//    cv::bitwise_and(input_3c, pointer_mask_3, pointer_sel);
-    cv::bitwise_and(input_gray, pointer_mask_out, pointer_sel);
-    pointer_sel_preprocess(pointer_sel, pointer_sel_processed);
-//    lines_detect(input_gray, lines, 1);
-    threshold(pointer_sel_processed, pointer_sel_processed, 0, 255, THRESH_OTSU);
-    lines_detect(pointer_sel_processed, lines, 0);
-
+    point_mask(input_3c, pointer_mask_out, true);
     
+    mask2points(pointer_mask_out, mask_points);
+    float max_dist = -1;
+    int max_index = 0;
+    for (int pi = 0; pi < mask_points.size(); pi ++)
+    {
+        float dist = pow(mask_points[pi].x - ct.x, 2) + pow(mask_points[pi].y - ct.y, 2);
+        if (dist >= max_dist)
+        {
+            max_dist = dist;
+            max_index = pi;
+        }
+    }
+    
+    // show pointer mask
+//    cv::imshow("pointer_mask_out", pointer_mask_out);
+//    cv::waitKey(0);
+    
+    lines_detect(pointer_mask_out, lines, 0);
     lines_select(lines, temp, line_data);
-    //show pointer_sel_processed
-    cv::imshow("pointer_sel_processed", pointer_sel_processed);
-    cv::waitKey(0);
     
     //inverse mask ang cover pointer
     pointer_mask_out = 255 - pointer_mask_out;
@@ -129,12 +135,23 @@ cv::Mat pointer_loc(cv::Mat input_3c, cv::Point ct, std::vector<cv::Point>& poin
     st_m.y = st_y / line_data.size();
     ed_m.x = ed_x / line_data.size();
     ed_m.y = ed_y / line_data.size();
+    
 
 //    cv::line(input_3c, st_m, ed_m, cv::Scalar(0, 255, 255), 3);
-    pointer.push_back(st_m);
+//    pointer.push_back(st_m);
 //    pointer.push_back(ed_m);
-    pointer.push_back(ct);
-    cv::line(input_3c, pointer[0], pointer[1], cv::Scalar(0, 255, 0));
+//    pointer.push_back(ct);
+    if (mask_points.size())
+    {
+        cv::line(input_3c, mask_points[max_index], ct, cv::Scalar(0, 255, 0));
+        pointer.push_back(mask_points[max_index]);
+        pointer.push_back(ct);
+    }
+    else
+    {
+        pointer.push_back(ct);
+        pointer.push_back(ct);
+    }
 
     
     
@@ -168,7 +185,7 @@ float cal_speed(std::vector<cv::Point>& pointer)
         float a = 2. / 3.;
         float b = 30;
         float delta = -1. / 24 * value + 15. / 4.;
-        value += delta;
+//        value += delta;
         if(value < -30)
         {
             speed = 0;

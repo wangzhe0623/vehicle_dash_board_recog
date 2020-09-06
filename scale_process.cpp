@@ -167,12 +167,6 @@ vector<Point> get_ell_base_lsd(Mat input_3c, RotatedRect& ell)
     gray_3c.copyTo(all_lines);
     gray_3c.copyTo(sel_lines);
     
-//    #if 1
-//        Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_STD);
-//    #else
-//        Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_ADV);
-//    #endif
-
     Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_ADV, 0.8, 0.6, 2.0, 20);
 
     vector<Vec4f> lines;
@@ -203,7 +197,7 @@ vector<Point> get_ell_base_lsd(Mat input_3c, RotatedRect& ell)
     ell = fitEllipse(ell_points);
     
 //    imshow("all_lines", all_lines);
-    imshow("sel_lines", sel_lines);
+//    imshow("sel_lines", sel_lines);
     return ell_points;
 }
 
@@ -215,8 +209,8 @@ Mat get_circle_based_ell(RotatedRect ell, Mat input_3c, Point& ct)
     ell.points(vertices);
 //    float ell_width = ell.size.width;
 //    float ell_height = ell.size.height;
-    float circle_edge = 200;
-    int shift = 180;
+    float circle_edge = 100;
+    int shift = 40;
 
 //    cv::Point2f* src_hand = new cv::Point2f[4];
 //    src_hand[0] = cv::Point2f(49, 76);
@@ -238,7 +232,9 @@ Mat get_circle_based_ell(RotatedRect ell, Mat input_3c, Point& ct)
     
     ct.x = shift + circle_edge / 2;
     ct.y = shift + circle_edge / 2;
-    circle(circle_out, ct, 1, Scalar(0, 255, 0), -1);
+    circle(circle_out, ct, 2, Scalar(0, 255, 0), -1);
+    line(circle_out, Point(shift, shift + circle_edge / 2), Point(shift + circle_edge, shift + circle_edge / 2), Scalar(0, 255, 255));
     
+
     return circle_out;
 }

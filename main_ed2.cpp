@@ -69,11 +69,18 @@ int main(int argc, const char * argv[]) {
             pointer_loc(circle_out, ct, pointer);
             float sp = cal_speed(pointer);
             std::cout << "speed: " << sp << std::endl;
-//            cv::putText(circle_out, std::to_string(sp), cv::Point(200, 200), 1, 2, cv::Scalar(0, 255,0));
+            if (sp == 0.00)
+            {
+                cv::putText(circle_out, "<= 10", cv::Point(100, 100), 1, 1, cv::Scalar(0, 255,0));
+            }
+            else
+            {
+                cv::putText(circle_out, std::to_string(sp), cv::Point(100, 100), 1, 1, cv::Scalar(0, 255,0));
+            }
             
-            imshow("test", test_img);
-            imshow("circle_out", circle_out);
-            waitKey(0);
+//            imshow("test", test_img);
+//            imshow("circle_out", circle_out);
+//            waitKey(0);
             cv::imwrite(save_path + "/" + "2th_" + image_names[i], test_img);
             cv::imwrite(save_path + "/" + "out_" + image_names[i], circle_out);
         }

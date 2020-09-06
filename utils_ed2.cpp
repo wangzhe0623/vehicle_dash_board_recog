@@ -63,9 +63,10 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
             {
                 //pixel
                 float c21 = input.at<Vec3b>(i,j)[2] / (input.at<Vec3b>(i,j)[1] + 0.01);
+                float c20 = input.at<Vec3b>(i,j)[2] / (input.at<Vec3b>(i,j)[0] + 0.01);
                 float c10 = input.at<Vec3b>(i,j)[1] / (input.at<Vec3b>(i,j)[0] + 0.01);
                 float c2 = input.at<Vec3b>(i,j)[2];
-                if(c21 >= thres[0] && c10 >= thres[1] && c2 >= thres[2])
+                if(c21 >= thres[0] && c10 >= thres[1] && c20 > thres[1] && c2 >= thres[2])
                     mask.at<uchar>(i,j) = 255;
             }
         }
@@ -76,8 +77,8 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
     if(postpre)
     {
         // dilate mask
-        int z = 4 * 2 + 1;
-        int x = 1 * 2 + 1;
+        int z = 1 * 2 + 1;
+        int x = 0 * 2 + 1;
 
         Mat structureElement_d = getStructuringElement(MORPH_ELLIPSE, Size(z, z), cv::Point(-1, -1));
         Mat structureElement_e = getStructuringElement(MORPH_ELLIPSE, Size(x, x), cv::Point(-1, -1));
@@ -86,6 +87,8 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
 
         //fill holes in mask
         fillHole(mask, mask);
+        erode(mask, mask, structureElement_e, cv::Point(-1, -1), 2);
+        erode(mask, mask, structureElement_e, cv::Point(-1, -1), 2);
         erode(mask, mask, structureElement_e, cv::Point(-1, -1), 2);
 
         vector<vector<cv::Point>> contours;
@@ -110,10 +113,11 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
             cv::Moments mu = moments(contours[i]);
             cv::Point mc(mu.m10 / mu.m00, mu.m01 / mu.m00);
             double area = contourArea(contours[i]);
-            double area_thre = 500;
+            double area_thre = 300;
             if(mc.x >= input.cols * 0.1 && mc.x <= input.cols * 0.9 && mc.y >= input.rows * 0.1 && mc.y <= input.rows * 0.9 && area >= area_thre)
             {
                 cv::drawContours(out_mask, contours, i, cv::Scalar(255), -1);
+//                cv::putText(out_mask, std::to_string(area), mc, 1, 1, Scalar(255));
             }
         }
 //        erode(out_mask, out_mask, structureElement_e, cv::Point(-1, -1), 2);
@@ -124,10 +128,9 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
 
 cv::Mat PerspectiveTrans(cv::Mat src, cv::Point2f* scrPoints, cv::Point2f* dstPoints)
 {
-//    Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
     Mat dst;
     Mat Trans = getPerspectiveTransform(scrPoints, dstPoints);
-    warpPerspective(src, dst, Trans, Size(600, 500), cv::INTER_CUBIC);
+    warpPerspective(src, dst, Trans, Size(240, 240), cv::INTER_CUBIC);
     
     return dst;
 }
@@ -187,3 +190,23 @@ cv::Point2f getCrossPoint(std::vector<cv::Point>& pointerA, std::vector<cv::Poin
     return crossPoint;
 }
 
+void mask2points(cv::Mat src_binary, std::vector<cv::Point>& dst)
+{
+    dst.clear();
+    for(int i=0; i < src_binary.cols; i ++)
+    {
+        for(int j=0; j < src_binary.rows; j ++)
+        {
+            
+            int value = src_binary.at<uchar>(j,i);
+            if (value > 0)
+            {
+                cv::Point p;
+                p.x = i;
+                p.y = j;
+                dst.push_back(p);
+            }
+        }
+    }
+    return;
+}

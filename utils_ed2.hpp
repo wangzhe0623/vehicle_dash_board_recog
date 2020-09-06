@@ -34,6 +34,7 @@ cv::Mat AffineTrans(cv::Mat src, cv::Point2f* scrPoints, cv::Point2f* dstPoints)
 cv::Mat contrastStretch2(cv::Mat &srcImage);
 //求两个直线交点
 cv::Point2f getCrossPoint(std::vector<cv::Point>& pointerA, std::vector<cv::Point>& pointerB);
-
+//掩膜转点集
+void mask2points(cv::Mat src_binary, std::vector<cv::Point>& dst);
 
 #endif /* utils_ed2_hpp */
