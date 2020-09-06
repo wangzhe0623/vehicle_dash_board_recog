@@ -15,12 +15,13 @@
 
 #include <iostream>
 #include <math.h>
-#include <dirent.h>
+#include <io.h>
 #include <vector>
 
 
 //路径处理
-bool get_fileNames(char* path, std::vector<std::string> &names);
+//bool get_fileNames(char* path, std::vector<std::string> &names);
+void get_fileNames(std::string path, std::vector<std::string>& files, std::vector<std::string>& names);
 //填二值图孔洞
 void fillHole(const cv::Mat srcimage, cv::Mat &dstimage);
 //轮廓拟合椭圆
@@ -34,7 +35,7 @@ cv::Mat AffineTrans(cv::Mat src, cv::Point2f* scrPoints, cv::Point2f* dstPoints)
 cv::Mat contrastStretch2(cv::Mat &srcImage);
 //求两个直线交点
 cv::Point2f getCrossPoint(std::vector<cv::Point>& pointerA, std::vector<cv::Point>& pointerB);
-//掩膜转点集
+//convert mask to points set
 void mask2points(cv::Mat src_binary, std::vector<cv::Point>& dst);
 
 #endif /* utils_ed2_hpp */

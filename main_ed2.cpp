@@ -38,12 +38,16 @@ int main(int argc, const char * argv[]) {
     
     
     //find scale; fit ellipse; get spped value
-    std::string save_path ="/Users/zhewang/Downloads/private/job/data_part3/re";
-    char* path ="/Users/zhewang/Downloads/private/job/data_part3/frames_cut_cut";  //normal
+    std::string save_path ="out";
+    std::string path ="imgs";  //normal
 //    char* path ="/Users/zhewang/Downloads/private/job/data_part3/frames_lb_cut";  //light blur
 
     vector<string> image_names;
-    get_fileNames(path, image_names);
+	vector<string> files;
+
+    //get_fileNames(path, image_names);
+	get_fileNames(path, files, image_names);
+
     string path_str = path;
 
     for(int i = 0; i < image_names.size(); i ++)

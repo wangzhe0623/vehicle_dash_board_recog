@@ -11,6 +11,7 @@
 using namespace std;
 using namespace cv;
 
+/*
 bool get_fileNames(char* path, vector<string> &names)
 {
     names.clear();
@@ -33,6 +34,36 @@ bool get_fileNames(char* path, vector<string> &names)
     
     closedir(dir);
     return true;
+}
+*/
+
+void get_fileNames(std::string path, std::vector<std::string>& files, std::vector<std::string>& names)
+{
+	//文件句柄，win10用long long，win7用long就可以了
+	long long hFile = 0;
+	//文件信息 
+	struct _finddata_t fileinfo;
+	std::string p;
+	if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
+	{
+		do
+		{
+			//如果是目录,迭代之 //如果不是,加入列表 
+			if ((fileinfo.attrib & _A_SUBDIR))
+			{
+				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
+				{
+					get_fileNames(p.assign(path).append("\\").append(fileinfo.name), files, names);
+				}
+			}
+			else
+			{
+				files.push_back(p.assign(path).append("\\").append(fileinfo.name));
+				names.push_back(fileinfo.name);
+			}
+		} while (_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
 }
 
 void fillHole(const cv::Mat srcimage, cv::Mat &dstimage)
@@ -97,12 +128,12 @@ bool seg_mask(cv::Mat input, cv::Mat& out_mask, cv::Scalar thres, bool postpre)
         cv::Point2f center;
         findContours(mask, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
         
-        vector<Moments> mu(contours.size());    //计算轮廓矩
+        vector<Moments> mu(contours.size());   
          for (int i = 0; i < contours.size(); i++)
          {
           mu[i] = moments(contours[i], false);
          }
-         vector<Point2f>  mc(contours.size());    //计算轮廓中心
+         vector<Point2f>  mc(contours.size());    
          for (int i = 0; i < contours.size(); i++)
          {
           mc[i] = Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
@@ -151,10 +182,9 @@ cv::Mat contrastStretch2(cv::Mat &srcImage)
         std::cerr << "image empty" << std::endl;
         return dstImage;
     }
-    // 计算图像的最大最小值
+	// cal max and min value
     double pixMin, pixMax, pixMax2;
     cv::minMaxLoc(srcImage,&pixMin,&pixMax);
-//    std::cout << "min_a=" << pixMin << " max_b=" << pixMax << std::endl;
     pixMin = 40;
     pixMax = 80;
     pixMax2 = 252;
